@@ -1,22 +1,25 @@
 import express from "express";
 import cors from "cors";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 
+import { connectDB } from "./config/db.js";
 import scrapeRoutes from "./routes/scrapeRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+//import exportRoutes from "./routes/exportRoutes.js";
+
+import "./queues/workers/scrapeWorker.js";
 
 dotenv.config();
-
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", scrapeRoutes);
+connectDB();
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log("Database connection failed:",err));
+app.use("/api", scrapeRoutes);
+app.use("/api", jobRoutes);
+//app.use("/api", exportRoutes);
 
 const PORT = process.env.PORT || 5000;
 

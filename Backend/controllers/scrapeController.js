@@ -1,20 +1,13 @@
-import { scrapeGoogleMaps } from "../services/scraperService.js";
-import Lead from "../models/Lead.js";
+import { scrapeQueue } from "../queues/scrapeQueue.js";
 
 export const scrapeLeads = async (req, res) => {
-  try {
-    const { query } = req.body;
 
-    const results = await scrapeGoogleMaps(query);
+  const { query } = req.body;
 
-    const savedLeads = await Lead.insertMany(results);
+  const job = await scrapeQueue.add("scrapeJob", { query });
 
-    res.json({
-      success: true,
-      count: savedLeads.length,
-      data: savedLeads
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  res.json({
+    success: true,
+    jobId: job.id
+  });
 };

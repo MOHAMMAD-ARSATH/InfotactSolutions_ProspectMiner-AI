@@ -1,31 +1,95 @@
 import { launchBrowser } from "./stealthBrowser.js";
 
 export const scrapeGoogleMaps = async (query) => {
-  const { browser, page } = await launchBrowser();
 
-  const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+const { browser, page } = await launchBrowser();
 
-  await page.goto(searchUrl, { waitUntil: "networkidle2" });
+  const url = `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
 
-  await page.waitForSelector('div[role="article"]');
+  await page.goto(url, { waitUntil: "networkidle2" });
+
+  await new Promise(r => setTimeout(r, 5000));
+
+  // Scroll results
+  await page.evaluate(async () => {
+
+    const scrollable = document.querySelector('div[role="feed"]');
+
+    if (!scrollable) return;
+
+    for (let i = 0; i < 8; i++) {
+
+      scrollable.scrollBy(0, 1000);
+
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+  });
 
   const leads = await page.evaluate(() => {
-    const results = [];
-    const items = document.querySelectorAll('div[role="article"]');
 
-    items.forEach(item => {
-      const name = item.querySelector("h3")?.innerText || "";
-      const address = item.querySelector(".W4Efsd:nth-child(2)")?.innerText || "";
+    const data = [];
 
-      results.push({
+    const listings = document.querySelectorAll('div[role="article"]');
+
+    listings.forEach(item => {
+
+      const name =
+        item.querySelector(".qBF1Pd")?.innerText || "";
+
+      const rating =
+        item.querySelector(".MW4etd")?.innerText || "";
+
+const infoSpans = Array.from(item.querySelectorAll(".W4Efsd span"))
+  .map(el => el.innerText.trim())
+  .filter(t => t !== "");
+
+let category = "";
+let address = "";
+let phone = "";
+
+infoSpans.forEach(text => {
+
+    if (!category && text.match(/hospital|clinic|gym|restaurant|school|company/i)) {
+    category = text;
+  }
+
+    if (!address && text.match(/road|rd|street|st|ave|nagar|colony|area|chennai|india/i)) {
+    address = text;
+  }
+
+  if (!phone && text.match(/\d{3,}/)) {
+    phone = text;
+  }
+
+});
+
+console.log(JSON.stringify({
+  name,
+  rating,
+  spans: Array.from(infoSpans).map(e => e.innerText)
+}));
+
+      const website =
+        item.querySelector('a[data-value="Website"]')?.href || "";
+
+      data.push({
         name,
-        address
+        category,
+        address,
+        rating,
+        website,
+        phone
       });
+
     });
 
-    return results;
+    return data;
+
   });
 
   await browser.close();
+
   return leads;
+
 };
