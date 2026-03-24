@@ -1,6 +1,6 @@
 import { launchBrowser } from "./stealthBrowser.js";
 
-export const scrapeGoogleMaps = async (query) => {
+export const scrapeGoogleMaps = async (query, jobId) => {
 
 const { browser, page } = await launchBrowser();
 
@@ -10,7 +10,7 @@ const { browser, page } = await launchBrowser();
 
   await new Promise(r => setTimeout(r, 5000));
 
-  // Scroll results
+
   await page.evaluate(async () => {
 
     const scrollable = document.querySelector('div[role="feed"]');
@@ -26,67 +26,59 @@ const { browser, page } = await launchBrowser();
 
   });
 
-  const leads = await page.evaluate(() => {
+  const leads = await page.evaluate((jobId) => {
 
-    const data = [];
+  const data = [];
 
-    const listings = document.querySelectorAll('div[role="article"]');
+  const listings = document.querySelectorAll('div[role="article"]');
 
-    listings.forEach(item => {
+  listings.forEach(item => {
 
-      const name =
-        item.querySelector(".qBF1Pd")?.innerText || "";
+    const name = item.querySelector(".qBF1Pd")?.innerText || "";
+    const rating = item.querySelector(".MW4etd")?.innerText || "";
 
-      const rating =
-        item.querySelector(".MW4etd")?.innerText || "";
+    const infoSpans = Array.from(item.querySelectorAll(".W4Efsd span"))
+      .map(el => el.innerText.trim())
+      .filter(t => t !== "");
 
-const infoSpans = Array.from(item.querySelectorAll(".W4Efsd span"))
-  .map(el => el.innerText.trim())
-  .filter(t => t !== "");
+    let category = "";
+    let address = "";
+    let phone = "";
 
-let category = "";
-let address = "";
-let phone = "";
+    infoSpans.forEach(text => {
 
-infoSpans.forEach(text => {
+      if (!category && text.match(/hospital|clinic|gym|restaurant|school|company/i)) {
+        category = text;
+      }
 
-    if (!category && text.match(/hospital|clinic|gym|restaurant|school|company/i)) {
-    category = text;
-  }
+      if (!address && text.match(/road|rd|street|st|ave|nagar|colony|area|chennai|india/i)) {
+        address = text;
+      }
 
-    if (!address && text.match(/road|rd|street|st|ave|nagar|colony|area|chennai|india/i)) {
-    address = text;
-  }
-
-  if (!phone && text.match(/\d{3,}/)) {
-    phone = text;
-  }
-
-});
-
-console.log(JSON.stringify({
-  name,
-  rating,
-  spans: Array.from(infoSpans).map(e => e.innerText)
-}));
-
-      const website =
-        item.querySelector('a[data-value="Website"]')?.href || "";
-
-      data.push({
-        name,
-        category,
-        address,
-        rating,
-        website,
-        phone
-      });
+      if (!phone && text.match(/\d{3,}/)) {
+        phone = text;
+      }
 
     });
 
-    return data;
+    const website =
+      item.querySelector('a[data-value="Website"]')?.href || "";
+
+    data.push({
+      name,
+      category,
+      address,
+      rating,
+      website,
+      phone,
+      jobId: jobId  
+    });
 
   });
+
+  return data;
+
+}, jobId);
 
   await browser.close();
 

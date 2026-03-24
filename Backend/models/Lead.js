@@ -10,6 +10,8 @@ const leadSchema = new mongoose.Schema({
   website: String,
   email: String,
   leadScore: String,
+  
+  jobId: Number,
 
   createdAt: {
     type: Date,

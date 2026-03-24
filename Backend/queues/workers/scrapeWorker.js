@@ -6,8 +6,6 @@ import { scrapeGoogleMaps } from "../../services/scraperService.js";
 
 import Lead from "../../models/Lead.js";
 
-import { generateEmail } from "../../utils/emailGenerator.js";
-
 import { calculateLeadScore } from "../../utils/leadScore.js";
 
 const worker = new Worker(
@@ -24,17 +22,14 @@ const worker = new Worker(
 
     const enriched = leads.map(lead => {
 
-      const email = generateEmail(lead.website);
-
       const leadScore = calculateLeadScore(lead);
 
       return {
 
         ...lead,
 
-        email,
-
-        leadScore
+        leadScore,
+        jobId: Number(job.id)
       };
     });
 

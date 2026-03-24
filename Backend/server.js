@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import scrapeRoutes from "./routes/scrapeRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
-//import exportRoutes from "./routes/exportRoutes.js";
+import leadRoutes from "./routes/leadRoutes.js";
 
 import "./queues/workers/scrapeWorker.js";
 
@@ -19,7 +19,8 @@ connectDB();
 
 app.use("/api", scrapeRoutes);
 app.use("/api", jobRoutes);
-//app.use("/api", exportRoutes);
+app.use("/api", leadRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 
