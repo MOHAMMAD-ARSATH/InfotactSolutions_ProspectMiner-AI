@@ -12,50 +12,83 @@ export default function LeadTable({ leads }) {
   const totalPages = Math.ceil(leads.length / recordsPerPage);
 
   return (
-    <div className="card p-3">
-      <table className="table table-striped">
+    <div className="table-responsive card p-3">
+      <table
+        className="table table-striped table-hover align-middle"
+        style={{ width: "100%" }}
+      >
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Location</th>
-            <th>Rating</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Lead Score</th>
+            <th style={{ width: "5%" }}>S.No</th>
+            <th style={{ width: "10%" }}>Job ID</th>
+            <th style={{ width: "20%" }}>Name</th>
+            <th style={{ width: "15%" }}>Category</th>
+            <th style={{ width: "20%" }}>Address</th>
+            <th style={{ width: "10%" }}>Rating</th>
+            <th style={{ width: "12%" }}>Phone</th>
+            <th style={{ width: "15%" }}>Email</th>
+            <th style={{ width: "10%" }}>Score</th>
           </tr>
         </thead>
 
         <tbody>
           {currentLeads.length > 0 ? (
-            currentLeads.map((lead) => (
+            currentLeads.map((lead, index) => (
               <tr key={lead._id}>
-                <td>{lead.name}</td>
-                <td>{lead.category}</td>
-                <td>{lead.address}</td>
-                <td>{lead.rating}</td>
-                <td>{lead.phone}</td>
-                <td>{lead.email}</td>
+                <td>{indexOfFirst + index + 1}</td>
+
+                <td>{lead.jobId}</td>
+
+                <td className="text-wrap">{lead.name}</td>
+
+                <td className="text-wrap">{lead.category}</td>
+
+                <td className="text-wrap">{lead.address}</td>
+
+                <td>
+                  {lead.rating ? (
+                    lead.rating
+                  ) : (
+                    <span className="text-muted">No rating</span>
+                  )}
+                </td>
+
+                <td>
+                  {lead.phone ? (
+                    lead.phone
+                  ) : (
+                    <span className="text-muted">No phone</span>
+                  )}
+                </td>
+
+                <td>
+                  {lead.email ? (
+                    lead.email
+                  ) : (
+                    <span className="text-muted">No email</span>
+                  )}
+                </td>
+
                 <td>
                   <span
                     className={`badge 
-                    ${
-                      lead.leadScore === "High"
-                        ? "bg-danger"
-                        : lead.leadScore === "Medium"
-                          ? "bg-success"
-                          : "bg-warning"
-                    }
-                  `}
+              ${
+                lead.leadScore === "High"
+                  ? "bg-danger"
+                  : lead.leadScore === "Medium"
+                    ? "bg-success"
+                    : "bg-warning"
+              }
+            `}
                   >
-                    {lead.leadScore}
+                    {lead.leadScore || "N/A"}
                   </span>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="7" className="text-center">
+              <td colSpan="9" className="text-center">
                 No leads found
               </td>
             </tr>

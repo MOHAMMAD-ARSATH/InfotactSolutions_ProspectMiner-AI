@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { getLeads } from "../services/api";
-
 import Filters from "../components/Filters";
 import Stats from "../components/Stats";
 import LeadTable from "../components/LeadTable";
+import Footer from "../components/Footer";
 
 export default function Dashboard() {
   const [leads, setLeads] = useState([]);
@@ -49,12 +49,34 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mt-4">
-      <Filters onFilter={handleFilter} />
+    <div className="dashboard">
+      <div className="dashboard-hero d-flex align-items-center">
+        <div className="container text-white">
+          <div className="m-5">
+            <h1 className="fw-bold display-5">
+              Smart Lead Generation Dashboard
+            </h1>
+            <p className="lead">
+              Discover, filter, and manage high-quality business leads
+              effortlessly
+            </p>
+          </div>
 
-      <Stats leads={filteredLeads} />
+          <div className="glass-card my-5 mx-3">
+            <Filters onFilter={handleFilter} />
+          </div>
 
-      <LeadTable leads={filteredLeads} />
+          <Stats leads={filteredLeads} />
+
+          <div className="lead-table container my-5">
+            <LeadTable leads={filteredLeads} />
+          </div>
+        </div>
+      </div>
+
+      <div className="footer">
+        <Footer />
+      </div>
     </div>
   );
 }

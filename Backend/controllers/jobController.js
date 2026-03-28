@@ -3,7 +3,6 @@ import Lead from "../models/Lead.js";
 
 export const getJobStatus = async (req, res) => {
   try {
-
     const jobId = req.params.id;
 
     const job = await scrapeQueue.getJob(jobId);
@@ -16,28 +15,26 @@ export const getJobStatus = async (req, res) => {
 
     res.json({
       id: job.id,
-      state
+      state,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Server error" });
   }
 };
 
-export const getJobs = async (req, res) => {
 
+export const getJobs = async (req, res) => {
   const jobs = await scrapeQueue.getJobs([
     "waiting",
     "active",
     "completed",
     "failed",
     "delayed",
-    "paused"
+    "paused",
   ]);
 
-  const history = jobs.map(job => {
-
+  const history = jobs.map((job) => {
     let status = "Processing";
 
     if (job.failedReason) {
@@ -50,7 +47,7 @@ export const getJobs = async (req, res) => {
       id: job.id,
       keyword: job.data.query,
       status,
-      addedAt: job.timestamp
+      addedAt: job.timestamp,
     };
   });
 
@@ -59,22 +56,40 @@ export const getJobs = async (req, res) => {
   res.json(history);
 };
 
+
 export const getJobLeads = async (req, res) => {
-
   try {
-
     const jobId = Number(req.params.id);
 
-    const leads = await Lead.find({ jobId: jobId });
+    const job = await scrapeQueue.getJob(jobId);
+    const leads = await Lead.find({ jobId });
 
-    if (!leads || leads.length === 0) {
-      return res.status(200).json([]);
-    }
-
-    res.json(leads);
-
+    res.json({
+      leads,
+      query: job?.data?.query || `Job #${jobId}`,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+export const deleteJobLead = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const job = await scrapeQueue.getJob(id);
+
+    if (job) {
+      await job.remove();
+    }
+
+    await Lead.deleteMany({ jobId: Number(id) });
+
+    res.json({ message: "Job and leads deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Delete failed" });
   }
 };

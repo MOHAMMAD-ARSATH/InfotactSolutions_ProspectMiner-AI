@@ -2,14 +2,13 @@ import { launchBrowser } from "./stealthBrowser.js";
 
 export const scrapeGoogleMaps = async (query, jobId) => {
 
-const { browser, page } = await launchBrowser();
+  const { browser, page } = await launchBrowser();
 
   const url = `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
 
   await page.goto(url, { waitUntil: "networkidle2" });
 
   await new Promise(r => setTimeout(r, 5000));
-
 
   await page.evaluate(async () => {
 
@@ -26,59 +25,70 @@ const { browser, page } = await launchBrowser();
 
   });
 
-  const leads = await page.evaluate((jobId) => {
+  const [inputCategory, inputLocation] = query.split(" in ");
 
-  const data = [];
+  const leads = await page.evaluate(({ jobId, inputCategory, inputLocation }) => {
 
-  const listings = document.querySelectorAll('div[role="article"]');
+    const data = [];
+    const listings = document.querySelectorAll('div[role="article"]');
 
-  listings.forEach(item => {
+    listings.forEach(item => {
 
-    const name = item.querySelector(".qBF1Pd")?.innerText || "";
-    const rating = item.querySelector(".MW4etd")?.innerText || "";
+      const name = item.querySelector(".qBF1Pd")?.innerText || "";
+      const rating = item.querySelector(".MW4etd")?.innerText || "";
 
-    const infoSpans = Array.from(item.querySelectorAll(".W4Efsd span"))
-      .map(el => el.innerText.trim())
-      .filter(t => t !== "");
+      const infoSpans = Array.from(item.querySelectorAll(".W4Efsd span"))
+        .map(el => el.innerText.trim())
+        .filter(t => t !== "");
 
-    let category = "";
-    let address = "";
-    let phone = "";
+      let category = "";
+      let address = "";
+      let phone = "";
 
-    infoSpans.forEach(text => {
+      infoSpans.forEach(text => {
 
-      if (!category && text.match(/hospital|clinic|gym|restaurant|school|company/i)) {
-        category = text;
+        if (!category && text.match(/hospital|clinic|gym|restaurant|school|company|store|shop/i)) {
+          category = text;
+        }
+
+        if (!address && text.match(/road|rd|street|st|ave|nagar|colony|area|india/i)) {
+          address = text;
+        }
+
+        if (!phone && text.match(/\d{5,}/)) {
+          phone = text.replace(/[^\d+]/g, "");
+        }
+
+      });
+
+      if (!category) {
+        category = inputCategory || "";
       }
 
-      if (!address && text.match(/road|rd|street|st|ave|nagar|colony|area|chennai|india/i)) {
-        address = text;
+      if (!address) {
+        address = inputLocation || "";
+      } else if (!address.toLowerCase().includes(inputLocation.toLowerCase())) {
+        address = address + ", " + inputLocation;
       }
 
-      if (!phone && text.match(/\d{3,}/)) {
-        phone = text;
-      }
+      const website =
+        item.querySelector('a[data-value="Website"]')?.href || "";
+
+      data.push({
+        name,
+        category,
+        address,
+        rating,
+        website,
+        phone,
+        jobId
+      });
 
     });
 
-    const website =
-      item.querySelector('a[data-value="Website"]')?.href || "";
+    return data;
 
-    data.push({
-      name,
-      category,
-      address,
-      rating,
-      website,
-      phone,
-      jobId: jobId  
-    });
-
-  });
-
-  return data;
-
-}, jobId);
+  }, { jobId, inputCategory, inputLocation });
 
   await browser.close();
 

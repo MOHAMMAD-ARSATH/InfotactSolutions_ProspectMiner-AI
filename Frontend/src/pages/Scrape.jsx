@@ -1,95 +1,105 @@
 import { useState } from "react";
-import { startScrape } from "../services/api";
 
+import { startScrape } from "../services/api";
 import ScrapeHistory from "../components/ScrapeHistory";
 
-export default function Scrape(){
-
+export default function Scrape() {
   const [type, setType] = useState("");
   const [location, setLocation] = useState("");
-  const [error, setError] = useState("");
+
+  const [errors, setErrors] = useState({});
   const [newJob, setNewJob] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleScrape = async () => {
+    let newErrors = {};
 
-  if (!type.trim() && !location.trim()) {
-    setError("Both Business Type and Location are required");
-    return;
-  }
+    if (!type.trim()) {
+      newErrors.type = "Scrape text is required";
+    }
 
-  if (!type.trim()) {
-    setError("Business Type is required");
-    return;
-  }
+    if (!location.trim()) {
+      newErrors.location = "Location is required";
+    }
 
-  if (!location.trim()) {
-    setError("Location is required");
-    return;
-  }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-  setError("");
+    setErrors({});
+    setLoading(true);
 
-  const res = await startScrape({
-    query: `${type} in ${location}`
-  });
+    try {
+      const res = await startScrape({
+        query: `${type} in ${location}`,
+      });
 
-  const job = {
-    id: res.data.jobId,
-    keyword: `${type} in ${location}`,
-    status: "Processing",
-    addedAt: Date.now()
+      const job = {
+        id: res.data.jobId,
+        keyword: `${type} in ${location}`,
+        status: "Processing",
+        addedAt: Date.now(),
+      };
+
+      setNewJob(job);
+
+      setType("");
+      setLocation("");
+    } catch (err) {
+      setErrors({ api: "Something went wrong. Try again." });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  setNewJob(job);
-
-  setType("");
-  setLocation("");
-};
-
   return (
-    <div className="container mt-4">
+    <div className="scrape p-3">
+      <div className="container">
+        <div className="card shadow-sm border-1 px-4 pb-5">
+          <h4 className="mb-4">🔍 Scrape Leads from Google</h4>
 
-      <div className="card p-4">
+          <div className="row g-3">
+            <div className="col-md-7">
+              <input
+                className="form-control"
+                placeholder="Enter a text to scrape from Google"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+              />
+              {errors.type && (
+                <small className="text-danger px-2">{errors.type}</small>
+              )}
+            </div>
 
-        <h4>Scrape Leads from Google Maps</h4>
+            <div className="col-md-3">
+              <input
+                className="form-control"
+                placeholder="Enter a location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+              {errors.location && (
+                <small className="text-danger px-2">{errors.location}</small>
+              )}
+            </div>
 
-        <div className="row mt-3">
-
-          <div className="col">
-            <input
-              className="form-control"
-              placeholder="Business Type"
-              value={type}
-              onChange={(e)=>setType(e.target.value)}
-            />
+            <div className="col-md-2 d-flex align-items-start">
+              <button
+                className="scrape-button"
+                onClick={handleScrape}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Start Scraping"}
+              </button>
+            </div>
           </div>
 
-          <div className="col">
-            <input
-              className="form-control"
-              placeholder="Location"
-              value={location}
-              onChange={(e)=>setLocation(e.target.value)}
-            />
-          </div>
-
+          {errors.api && <div className="text-danger mt-2">{errors.api}</div>}
         </div>
 
-        {error && (
-          <p className="text-danger mt-2">{error}</p>
-        )}
-
-        <button
-          className="btn btn-primary mt-3"
-          onClick={handleScrape}
-        >
-          Scrape Leads
-        </button>
-
+        <ScrapeHistory newJob={newJob} />
       </div>
-
-      <ScrapeHistory newJob={newJob} />
-
     </div>
   );
 }

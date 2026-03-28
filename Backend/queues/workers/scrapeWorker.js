@@ -1,11 +1,8 @@
 import { Worker } from "bullmq";
 
 import redisConnection from "../../config/redis.js";
-
-import { scrapeGoogleMaps } from "../../services/scraperService.js";
-
 import Lead from "../../models/Lead.js";
-
+import { scrapeGoogleMaps } from "../../services/scraperService.js";
 import { calculateLeadScore } from "../../utils/leadScore.js";
 
 const worker = new Worker(

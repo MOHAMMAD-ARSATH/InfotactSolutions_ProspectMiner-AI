@@ -6,6 +6,7 @@ import { connectDB } from "./config/db.js";
 import scrapeRoutes from "./routes/scrapeRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
+import exportRoutes from "./routes/exportRoutes.js";
 
 import "./queues/workers/scrapeWorker.js";
 
@@ -20,6 +21,7 @@ connectDB();
 app.use("/api", scrapeRoutes);
 app.use("/api", jobRoutes);
 app.use("/api", leadRoutes);
+app.use("/api", exportRoutes);
 
 
 const PORT = process.env.PORT || 5000;
